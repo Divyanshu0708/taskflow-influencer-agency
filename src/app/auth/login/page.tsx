@@ -1,9 +1,9 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { useAuth } from '@/hooks/useAuth'
+import { useRouter } from 'next/navigation'
+import { supabase } from '@/lib/supabase'
 import { Eye, EyeOff, CheckSquare, Loader2, AlertCircle } from 'lucide-react'
 
 export default function LoginPage() {
@@ -12,7 +12,6 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const { signIn, profile } = useAuth()
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -20,33 +19,42 @@ export default function LoginPage() {
     setError('')
     setLoading(true)
 
-    const { error } = await signIn(email, password)
-    if (error) {
+    try {
+      // Sign in
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+      if (signInError) throw signInError
+      if (!data.user) throw new Error('No user returned')
+
+      // Fetch profile in parallel - single query
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', data.user.id)
+        .single()
+
+      // Redirect based on role immediately
+      if (profile?.role === 'admin') {
+        router.replace('/admin')
+      } else {
+        router.replace('/employee')
+      }
+    } catch (err: any) {
       setError('Invalid email or password. Please try again.')
       setLoading(false)
-      return
     }
-
-    // Redirect is handled by the profile role check
-    // Small delay to allow profile to load
-    setTimeout(() => {
-      router.refresh()
-    }, 500)
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50/30 to-slate-50 dark:from-slate-900 dark:via-indigo-900/10 dark:to-slate-900 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Logo */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-indigo-600 mb-4 shadow-lg shadow-indigo-500/30">
             <CheckSquare className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">TaskFlow</h1>
-          <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm">Agency Task Management</p>
+          <p className="text-slate-500 dark:text-slate-400 mt-1 text-sm">Influencer Agency</p>
         </div>
 
-        {/* Card */}
         <div className="card p-8">
           <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-1">Sign in</h2>
           <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">Welcome back! Enter your credentials.</p>
@@ -69,6 +77,7 @@ export default function LoginPage() {
                 onChange={e => setEmail(e.target.value)}
                 required
                 autoComplete="email"
+                autoFocus
               />
             </div>
 
@@ -87,7 +96,7 @@ export default function LoginPage() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -101,28 +110,15 @@ export default function LoginPage() {
             </div>
 
             <button type="submit" disabled={loading} className="btn-primary w-full">
-              {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Signing in…</> : 'Sign in'}
+              {loading ? (
+                <><Loader2 className="w-4 h-4 animate-spin" /> Signing in…</>
+              ) : 'Sign in'}
             </button>
           </form>
         </div>
 
-        {/* Demo credentials */}
-        <div className="mt-4 p-4 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 border border-indigo-100 dark:border-indigo-800">
-          <p className="text-xs font-semibold text-indigo-700 dark:text-indigo-300 mb-2">Demo Credentials</p>
-          <div className="space-y-1 text-xs text-indigo-600 dark:text-indigo-400">
-            <div className="flex justify-between">
-              <span>Admin:</span>
-              <span className="font-mono">admin@agency.com / Admin@123</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Employee:</span>
-              <span className="font-mono">sarah@agency.com / Employee@123</span>
-            </div>
-          </div>
-        </div>
-
         <p className="text-center text-xs text-slate-400 dark:text-slate-600 mt-6">
-          © 2024 TaskFlow. All rights reserved.
+          © 2025 HypeMitrainhouse. All rights reserved.
         </p>
       </div>
     </div>
