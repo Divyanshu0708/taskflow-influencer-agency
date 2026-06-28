@@ -6,8 +6,7 @@ import { Profile, TaskSummary } from '@/types'
 import { getInitials, cn } from '@/lib/utils'
 import {
   Plus, X, Loader2, Users, Search, Mail, Phone,
-  Building2, CheckCircle2, AlertCircle, Clock, Circle,
-  Edit2, UserX, UserCheck, Eye
+  Building2, Eye, UserX, UserCheck
 } from 'lucide-react'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
@@ -50,58 +49,48 @@ export default function AdminEmployeesPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!form.email || !form.password || !form.full_name) return
     setSubmitting(true)
 
-    // Use admin API through a server function (or just use Supabase admin SDK)
-    // For client-side, we use signUp and then update role
-    const { data, error } = await supabase.auth.admin?.createUser({
-      email: form.email,
-      password: form.password,
-      user_metadata: { full_name: form.full_name, role: 'employee' },
-      email_confirm: true,
-    }) as any
-
-    if (error) {
-      // Fallback: regular signup (works in most setups)
+    try {
+      // Step 1: Sign up the new user
       const { data: signupData, error: signupError } = await supabase.auth.signUp({
         email: form.email,
         password: form.password,
-        options: { data: { full_name: form.full_name, role: 'employee' } }
+        options: {
+          data: {
+            full_name: form.full_name,
+            role: 'employee',
+          }
+        }
       })
 
-      if (signupError) {
-        toast.error(signupError.message)
-        setSubmitting(false)
-        return
-      }
+      if (signupError) throw signupError
+      if (!signupData.user) throw new Error('No user returned')
 
-      // Update profile with extra details
-      if (signupData.user) {
-        await supabase.from('profiles').upsert({
-          id: signupData.user.id,
-          email: form.email,
-          full_name: form.full_name,
-          role: 'employee',
-          department: form.department,
-          phone: form.phone,
-        })
-      }
-    } else if (data?.user) {
-      await supabase.from('profiles').upsert({
-        id: data.user.id,
+      // Step 2: Upsert the profile with employee role and extra details
+      const { error: profileError } = await supabase.from('profiles').upsert({
+        id: signupData.user.id,
         email: form.email,
         full_name: form.full_name,
         role: 'employee',
-        department: form.department,
-        phone: form.phone,
+        department: form.department || null,
+        phone: form.phone || null,
+        is_active: true,
       })
-    }
 
-    toast.success(`Employee ${form.full_name} created successfully`)
-    setShowModal(false)
-    setForm(defaultForm)
-    fetchData()
-    setSubmitting(false)
+      if (profileError) throw profileError
+
+      toast.success(`${form.full_name} added successfully! They can now log in.`)
+      setShowModal(false)
+      setForm(defaultForm)
+      fetchData()
+    } catch (err: any) {
+      console.error(err)
+      toast.error(err.message || 'Failed to create employee')
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   const toggleActive = async (employee: Profile) => {
@@ -141,9 +130,8 @@ export default function AdminEmployeesPage() {
         <div className="text-center py-16">
           <Users className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
           <h3 className="text-lg font-medium text-slate-700 dark:text-slate-300">{search ? 'No employees found' : 'No employees yet'}</h3>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-            {search ? 'Try a different search' : 'Add your first team member to get started'}
-          </p>
+          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">Add your first team member</p>
+          {!search && <button onClick={() => setShowModal(true)} className="btn-primary mt-4"><Plus className="w-4 h-4" /> Add Employee</button>}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -165,20 +153,15 @@ export default function AdminEmployeesPage() {
                       )}
                     </div>
                   </div>
-                  <div className="flex gap-1">
-                    <button
-                      onClick={() => toggleActive(emp)}
-                      className={cn(
-                        'p-1.5 rounded-lg transition-colors',
-                        emp.is_active
-                          ? 'hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500'
-                          : 'hover:bg-emerald-50 dark:hover:bg-emerald-900/20 text-slate-400 hover:text-emerald-500'
-                      )}
-                      title={emp.is_active ? 'Deactivate' : 'Activate'}
-                    >
-                      {emp.is_active ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
-                    </button>
-                  </div>
+                  <button
+                    onClick={() => toggleActive(emp)}
+                    className={cn('p-1.5 rounded-lg transition-colors', emp.is_active
+                      ? 'hover:bg-red-50 dark:hover:bg-red-900/20 text-slate-400 hover:text-red-500'
+                      : 'hover:bg-emerald-50 text-slate-400 hover:text-emerald-500')}
+                    title={emp.is_active ? 'Deactivate' : 'Activate'}
+                  >
+                    {emp.is_active ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
+                  </button>
                 </div>
 
                 <div className="space-y-2 mb-4">
@@ -201,7 +184,7 @@ export default function AdminEmployeesPage() {
                         { label: 'Total', value: summary.total_tasks, color: 'text-slate-600 dark:text-slate-400' },
                         { label: 'Done', value: summary.completed_tasks, color: 'text-emerald-600' },
                         { label: 'Active', value: summary.in_progress_tasks, color: 'text-blue-600' },
-                        { label: 'Overdue', value: summary.overdue_tasks, color: 'text-red-500' },
+                        { label: 'Late', value: summary.overdue_tasks, color: 'text-red-500' },
                       ].map(stat => (
                         <div key={stat.label} className="text-center">
                           <p className={cn('text-base font-bold', stat.color)}>{stat.value}</p>
@@ -209,7 +192,6 @@ export default function AdminEmployeesPage() {
                         </div>
                       ))}
                     </div>
-
                     <div className="space-y-1">
                       <div className="flex justify-between text-xs">
                         <span className="text-slate-500 dark:text-slate-400">Completion</span>
@@ -217,11 +199,9 @@ export default function AdminEmployeesPage() {
                       </div>
                       <div className="h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                         <div
-                          className={cn(
-                            'h-full rounded-full transition-all',
+                          className={cn('h-full rounded-full transition-all',
                             summary.completion_rate >= 75 ? 'bg-emerald-500' :
-                            summary.completion_rate >= 50 ? 'bg-indigo-500' :
-                            summary.completion_rate >= 25 ? 'bg-amber-500' : 'bg-red-500'
+                            summary.completion_rate >= 50 ? 'bg-indigo-500' : 'bg-amber-500'
                           )}
                           style={{ width: `${summary.completion_rate}%` }}
                         />
@@ -232,10 +212,7 @@ export default function AdminEmployeesPage() {
                   <p className="text-xs text-slate-400 text-center py-2">No tasks assigned yet</p>
                 )}
 
-                <Link
-                  href={`/admin/tasks?employee=${emp.id}`}
-                  className="btn-secondary w-full mt-4 text-xs justify-center"
-                >
+                <Link href={`/admin/tasks?employee=${emp.id}`} className="btn-secondary w-full mt-4 text-xs justify-center">
                   <Eye className="w-3.5 h-3.5" /> View Tasks
                 </Link>
               </div>
@@ -244,7 +221,6 @@ export default function AdminEmployeesPage() {
         </div>
       )}
 
-      {/* Add Employee Modal */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowModal(false)} />
@@ -255,29 +231,28 @@ export default function AdminEmployeesPage() {
                 <X className="w-5 h-5" />
               </button>
             </div>
-
             <form onSubmit={handleCreate} className="p-5 space-y-4">
               <div>
                 <label className="label">Full Name *</label>
-                <input className="input" placeholder="Sarah Johnson" value={form.full_name} onChange={e => setForm(p => ({ ...p, full_name: e.target.value }))} required />
+                <input className="input" placeholder="Sara Khan" value={form.full_name} onChange={e => setForm(p => ({ ...p, full_name: e.target.value }))} required />
               </div>
               <div>
                 <label className="label">Email Address *</label>
-                <input type="email" className="input" placeholder="sarah@agency.com" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} required />
+                <input type="email" className="input" placeholder="sara@agency.com" value={form.email} onChange={e => setForm(p => ({ ...p, email: e.target.value }))} required />
               </div>
               <div>
-                <label className="label">Temporary Password *</label>
+                <label className="label">Password *</label>
                 <input type="password" className="input" placeholder="Min. 8 characters" value={form.password} onChange={e => setForm(p => ({ ...p, password: e.target.value }))} required minLength={8} />
-                <p className="text-xs text-slate-400 mt-1">Employee can change this after first login</p>
+                <p className="text-xs text-slate-400 mt-1">Employee uses this to log in</p>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="label">Department</label>
-                  <input className="input" placeholder="Marketing" value={form.department} onChange={e => setForm(p => ({ ...p, department: e.target.value }))} />
+                  <input className="input" placeholder="Content" value={form.department} onChange={e => setForm(p => ({ ...p, department: e.target.value }))} />
                 </div>
                 <div>
                   <label className="label">Phone</label>
-                  <input className="input" placeholder="+91 9876543210" value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} />
+                  <input className="input" placeholder="+91 98765 43210" value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} />
                 </div>
               </div>
               <div className="flex gap-3 pt-2">
