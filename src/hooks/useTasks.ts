@@ -23,8 +23,8 @@ export function useTasks() {
           *,
           assignee:profiles!tasks_assigned_to_fkey(id, full_name, email, avatar_url, department),
           creator:profiles!tasks_created_by_fkey(id, full_name, email),
-          comments:task_comments(id, content, created_at, user:profiles(full_name, avatar_url)),
-          attachments:task_attachments(*)
+          comments:task_comments(id, content, created_at, user:profiles(id, full_name, avatar_url)),
+          attachments:task_attachments(id, file_name, file_url, file_type, file_size, created_at)
         `)
         .order('created_at', { ascending: false })
 
@@ -38,7 +38,8 @@ export function useTasks() {
       setTasks(data || [])
       return data || []
     } catch (err: unknown) {
-      toast.error('Failed to load tasks')
+      const message = err instanceof Error ? err.message : 'Failed to load tasks'
+      toast.error(message)
       return []
     } finally {
       setLoading(false)
@@ -52,10 +53,13 @@ export function useTasks() {
       .select()
       .single()
 
-    if (error) { toast.error('Failed to create task'); return null }
+    if (error) {
+      toast.error('Failed to create task: ' + error.message)
+      return null
+    }
 
-    // Create notification for employee
-    if (taskData.assigned_to) {
+    // Notify assigned employee
+    if (taskData.assigned_to && data) {
       await supabase.from('notifications').insert([{
         user_id: taskData.assigned_to,
         title: 'New Task Assigned',
@@ -65,7 +69,7 @@ export function useTasks() {
       }])
     }
 
-    toast.success('Task created successfully')
+    toast.success('Task created!')
     return data
   }, [])
 
@@ -77,7 +81,10 @@ export function useTasks() {
       .select()
       .single()
 
-    if (error) { toast.error('Failed to update task'); return null }
+    if (error) {
+      toast.error('Failed to update task')
+      return null
+    }
     toast.success('Task updated')
     return data
   }, [])
@@ -90,13 +97,19 @@ export function useTasks() {
       .select()
       .single()
 
-    if (error) { toast.error('Failed to update status'); return null }
+    if (error) {
+      toast.error('Failed to update status')
+      return null
+    }
     return data
   }, [])
 
   const deleteTask = useCallback(async (id: string) => {
     const { error } = await supabase.from('tasks').delete().eq('id', id)
-    if (error) { toast.error('Failed to delete task'); return false }
+    if (error) {
+      toast.error('Failed to delete task')
+      return false
+    }
     toast.success('Task deleted')
     return true
   }, [])
@@ -105,26 +118,32 @@ export function useTasks() {
     const { data, error } = await supabase
       .from('task_comments')
       .insert([{ task_id: taskId, user_id: userId, content }])
-      .select('*, user:profiles(full_name, avatar_url)')
+      .select('*, user:profiles(id, full_name, avatar_url)')
       .single()
 
-    if (error) { toast.error('Failed to add comment'); return null }
+    if (error) {
+      toast.error('Failed to add comment')
+      return null
+    }
     return data
   }, [])
 
   const uploadAttachment = useCallback(async (taskId: string, userId: string, file: File) => {
-    const fileExt = file.name.split('.').pop()
-    const filePath = `${taskId}/${Date.now()}.${fileExt}`
+    const fileExt = file.name.split('.').pop() || 'bin'
+    const safeFileName = `${taskId}/${Date.now()}.${fileExt}`
 
     const { error: uploadError } = await supabase.storage
       .from('task-attachments')
-      .upload(filePath, file)
+      .upload(safeFileName, file, { cacheControl: '3600', upsert: false })
 
-    if (uploadError) { toast.error('Failed to upload file'); return null }
+    if (uploadError) {
+      toast.error('Failed to upload file')
+      return null
+    }
 
     const { data: { publicUrl } } = supabase.storage
       .from('task-attachments')
-      .getPublicUrl(filePath)
+      .getPublicUrl(safeFileName)
 
     const { data, error } = await supabase
       .from('task_attachments')
@@ -133,14 +152,17 @@ export function useTasks() {
         user_id: userId,
         file_name: file.name,
         file_url: publicUrl,
-        file_type: file.type,
+        file_type: file.type || null,
         file_size: file.size,
       }])
       .select()
       .single()
 
-    if (error) { toast.error('Failed to save attachment'); return null }
-    toast.success('File uploaded')
+    if (error) {
+      toast.error('Failed to save attachment record')
+      return null
+    }
+    toast.success('File uploaded successfully')
     return data
   }, [])
 

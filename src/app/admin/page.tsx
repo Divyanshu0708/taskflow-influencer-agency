@@ -3,14 +3,14 @@
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { supabase } from '@/lib/supabase'
-import { Task, TaskSummary, DashboardStats, Profile } from '@/types'
-import { formatDate, formatRelative, statusConfig, priorityConfig, getInitials, cn } from '@/lib/utils'
+import { Task, TaskSummary, DashboardStats } from '@/types'
+import { formatDate, statusConfig, priorityConfig, getInitials, cn } from '@/lib/utils'
 import StatsCard from '@/components/shared/StatsCard'
 import {
   CheckSquare, Clock, AlertCircle, Users, TrendingUp,
-  Plus, ArrowRight, Circle, Calendar, UserCheck
+  Plus, ArrowRight, UserCheck
 } from 'lucide-react'
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null)
@@ -27,21 +27,21 @@ export default function AdminDashboard() {
   const fetchDashboardData = useCallback(async () => {
     setLoading(true)
     try {
-      const [tasksRes, profilesRes, attendanceRes, summaryRes] = await Promise.all([
-        supabase.from('tasks').select('*, assignee:profiles!tasks_assigned_to_fkey(id, full_name, avatar_url)').order('created_at', { ascending: false }).limit(8),
-        supabase.from('profiles').select('id').eq('role', 'employee').eq('is_active', true),
-        supabase.from('attendance').select('id').eq('date', new Date().toISOString().split('T')[0]),
-        supabase.from('task_summary').select('*'),
+      const today = new Date().toISOString().split('T')[0]
+      const now = new Date().toISOString()
+
+      const [allTasksRes, recentRes, employeesRes, attendanceRes, summaryRes] = await Promise.all([
+        supabase.from('tasks').select('id, status, deadline'),
+        supabase.from('tasks').select('id, title, priority, status, deadline, assigned_to, assignee:profiles!tasks_assigned_to_fkey(id, full_name)').order('created_at', { ascending: false }).limit(5) as any,
+        supabase.from('profiles').select('id', { count: 'exact' }).eq('role', 'employee').eq('is_active', true),
+        supabase.from('attendance').select('id', { count: 'exact' }).eq('date', today),
+        supabase.from('task_summary').select('*').order('completion_rate', { ascending: false }).limit(5),
       ])
 
-      const tasks = tasksRes.data || []
-      const totalTasks = tasks.length
-      const allTasksRes = await supabase.from('tasks').select('id, status, deadline')
       const allTasks = allTasksRes.data || []
-
       const completed = allTasks.filter(t => t.status === 'completed').length
       const inProgress = allTasks.filter(t => t.status === 'in_progress').length
-      const overdue = allTasks.filter(t => t.status !== 'completed' && t.deadline && new Date(t.deadline) < new Date()).length
+      const overdue = allTasks.filter(t => t.status !== 'completed' && t.deadline && t.deadline < now).length
       const notStarted = allTasks.filter(t => t.status === 'not_started').length
 
       setStats({
@@ -50,11 +50,11 @@ export default function AdminDashboard() {
         in_progress_tasks: inProgress,
         overdue_tasks: overdue,
         not_started_tasks: notStarted,
-        total_employees: (profilesRes.data || []).length,
-        today_checkins: (attendanceRes.data || []).length,
+        total_employees: employeesRes.count ?? 0,
+        today_checkins: attendanceRes.count ?? 0,
         completion_rate: allTasks.length > 0 ? Math.round(completed / allTasks.length * 100) : 0,
       })
-      setRecentTasks(tasks)
+      setRecentTasks(recentRes.data || [])
       setEmployeeSummary(summaryRes.data || [])
     } finally {
       setLoading(false)
@@ -63,21 +63,24 @@ export default function AdminDashboard() {
 
   useEffect(() => { fetchDashboardData() }, [fetchDashboardData])
 
-  const chartData = employeeSummary.slice(0, 6).map(e => ({
+  const chartData = employeeSummary.map(e => ({
     name: e.full_name.split(' ')[0],
     completed: e.completed_tasks,
-    pending: e.total_tasks - e.completed_tasks,
-    rate: e.completion_rate,
+    pending: Math.max(0, e.total_tasks - e.completed_tasks),
   }))
 
   if (loading) {
     return (
-      <div className="p-6">
-        <div className="animate-pulse space-y-4">
-          <div className="h-8 w-48 bg-slate-200 dark:bg-slate-700 rounded" />
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            {[...Array(4)].map((_, i) => <div key={i} className="h-28 bg-slate-200 dark:bg-slate-700 rounded-xl" />)}
-          </div>
+      <div className="p-4 sm:p-6 space-y-4">
+        <div className="h-8 w-56 bg-slate-200 dark:bg-slate-700 rounded animate-pulse" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-28 bg-slate-200 dark:bg-slate-700 rounded-xl animate-pulse" />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="lg:col-span-2 h-64 bg-slate-200 dark:bg-slate-700 rounded-xl animate-pulse" />
+          <div className="h-64 bg-slate-200 dark:bg-slate-700 rounded-xl animate-pulse" />
         </div>
       </div>
     )
@@ -98,44 +101,23 @@ export default function AdminDashboard() {
         </Link>
       </div>
 
-      {/* Stats grid */}
+      {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <StatsCard
-          title="Total Tasks"
-          value={stats?.total_tasks ?? 0}
-          icon={CheckSquare}
-          iconColor="text-indigo-600 dark:text-indigo-400"
-          iconBg="bg-indigo-50 dark:bg-indigo-900/20"
-        />
-        <StatsCard
-          title="Completed"
-          value={stats?.completed_tasks ?? 0}
-          icon={CheckSquare}
-          iconColor="text-emerald-600 dark:text-emerald-400"
-          iconBg="bg-emerald-50 dark:bg-emerald-900/20"
-          trend={`${stats?.completion_rate ?? 0}% completion rate`}
-          trendUp
-        />
-        <StatsCard
-          title="In Progress"
-          value={stats?.in_progress_tasks ?? 0}
-          icon={Clock}
-          iconColor="text-blue-600 dark:text-blue-400"
-          iconBg="bg-blue-50 dark:bg-blue-900/20"
-        />
-        <StatsCard
-          title="Overdue"
-          value={stats?.overdue_tasks ?? 0}
-          icon={AlertCircle}
-          iconColor="text-red-600 dark:text-red-400"
-          iconBg="bg-red-50 dark:bg-red-900/20"
-          trend={stats?.overdue_tasks ? 'Needs attention' : 'All on track!'}
-          trendUp={!stats?.overdue_tasks}
-        />
+        <StatsCard title="Total Tasks" value={stats?.total_tasks ?? 0} icon={CheckSquare}
+          iconColor="text-indigo-600 dark:text-indigo-400" iconBg="bg-indigo-50 dark:bg-indigo-900/20" />
+        <StatsCard title="Completed" value={stats?.completed_tasks ?? 0} icon={CheckSquare}
+          iconColor="text-emerald-600 dark:text-emerald-400" iconBg="bg-emerald-50 dark:bg-emerald-900/20"
+          trend={`${stats?.completion_rate ?? 0}% rate`} trendUp />
+        <StatsCard title="In Progress" value={stats?.in_progress_tasks ?? 0} icon={Clock}
+          iconColor="text-blue-600 dark:text-blue-400" iconBg="bg-blue-50 dark:bg-blue-900/20" />
+        <StatsCard title="Overdue" value={stats?.overdue_tasks ?? 0} icon={AlertCircle}
+          iconColor="text-red-600 dark:text-red-400" iconBg="bg-red-50 dark:bg-red-900/20"
+          trend={stats?.overdue_tasks ? `${stats.overdue_tasks} need attention` : 'All on track!'}
+          trendUp={!stats?.overdue_tasks} />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-        {/* Team Performance Chart */}
+        {/* Chart */}
         <div className="lg:col-span-2 card p-5">
           <div className="flex items-center justify-between mb-5">
             <h2 className="font-semibold text-slate-900 dark:text-white">Team Performance</h2>
@@ -148,50 +130,37 @@ export default function AdminDashboard() {
               <BarChart data={chartData} barSize={20} barGap={4}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
                 <XAxis dataKey="name" tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} />
-                <Tooltip
-                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', fontSize: '12px' }}
-                />
+                <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 20px rgba(0,0,0,0.1)', fontSize: '12px' }} />
                 <Bar dataKey="completed" name="Completed" fill="#6366f1" radius={[4, 4, 0, 0]} />
                 <Bar dataKey="pending" name="Pending" fill="#e2e8f0" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-[220px] flex items-center justify-center text-slate-400 text-sm">
-              No data yet — assign some tasks to get started
+            <div className="h-[220px] flex flex-col items-center justify-center text-slate-400">
+              <CheckSquare className="w-8 h-8 mb-2 opacity-40" />
+              <p className="text-sm">No data yet — assign some tasks to get started</p>
             </div>
           )}
         </div>
 
         {/* Quick stats */}
         <div className="space-y-3">
-          <div className="card p-4 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-violet-50 dark:bg-violet-900/20 flex items-center justify-center">
-              <Users className="w-5 h-5 text-violet-600 dark:text-violet-400" />
+          {[
+            { label: 'Active Employees', value: stats?.total_employees ?? 0, icon: Users, color: 'text-violet-600 dark:text-violet-400', bg: 'bg-violet-50 dark:bg-violet-900/20' },
+            { label: 'Checked In Today', value: stats?.today_checkins ?? 0, icon: UserCheck, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
+            { label: 'Completion Rate', value: `${stats?.completion_rate ?? 0}%`, icon: TrendingUp, color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-900/20' },
+          ].map(s => (
+            <div key={s.label} className="card p-4 flex items-center gap-3">
+              <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center shrink-0', s.bg)}>
+                <s.icon className={cn('w-5 h-5', s.color)} />
+              </div>
+              <div>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{s.label}</p>
+                <p className="text-xl font-bold text-slate-900 dark:text-white">{s.value}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Active Employees</p>
-              <p className="text-xl font-bold text-slate-900 dark:text-white">{stats?.total_employees ?? 0}</p>
-            </div>
-          </div>
-          <div className="card p-4 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center">
-              <UserCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-            </div>
-            <div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Checked In Today</p>
-              <p className="text-xl font-bold text-slate-900 dark:text-white">{stats?.today_checkins ?? 0}</p>
-            </div>
-          </div>
-          <div className="card p-4 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 flex items-center justify-center">
-              <TrendingUp className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
-            </div>
-            <div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Completion Rate</p>
-              <p className="text-xl font-bold text-slate-900 dark:text-white">{stats?.completion_rate ?? 0}%</p>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
 
@@ -206,16 +175,19 @@ export default function AdminDashboard() {
           </div>
           <div className="divide-y divide-slate-100 dark:divide-slate-700">
             {recentTasks.length === 0 ? (
-              <div className="p-8 text-center text-slate-400 text-sm">No tasks yet</div>
-            ) : recentTasks.slice(0, 5).map(task => {
+              <div className="p-8 text-center">
+                <CheckSquare className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+                <p className="text-sm text-slate-400">No tasks yet</p>
+              </div>
+            ) : recentTasks.map(task => {
               const pr = priorityConfig[task.priority]
               const st = statusConfig[task.status]
               return (
-                <div key={task.id} className="flex items-center gap-3 px-5 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/30">
+                <div key={task.id} className="flex items-center gap-3 px-5 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors">
                   <div className={cn('w-1.5 h-8 rounded-full shrink-0', pr.dot)} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{task.title}</p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                    <p className="text-xs text-slate-500 dark:text-slate-400">
                       {(task as any).assignee?.full_name ?? 'Unassigned'} · {formatDate(task.deadline)}
                     </p>
                   </div>
@@ -236,10 +208,13 @@ export default function AdminDashboard() {
           </div>
           <div className="divide-y divide-slate-100 dark:divide-slate-700">
             {employeeSummary.length === 0 ? (
-              <div className="p-8 text-center text-slate-400 text-sm">No employees yet</div>
-            ) : employeeSummary.slice(0, 5).map((emp, i) => (
+              <div className="p-8 text-center">
+                <Users className="w-8 h-8 text-slate-300 dark:text-slate-600 mx-auto mb-2" />
+                <p className="text-sm text-slate-400">No employees yet</p>
+              </div>
+            ) : employeeSummary.map((emp, i) => (
               <div key={emp.employee_id} className="flex items-center gap-3 px-5 py-3">
-                <span className="text-xs font-bold text-slate-400 w-4 shrink-0">#{i + 1}</span>
+                <span className="text-xs font-bold text-slate-400 w-5 shrink-0 text-center">#{i + 1}</span>
                 <div className="w-8 h-8 rounded-full bg-indigo-500 flex items-center justify-center text-white text-xs font-semibold shrink-0">
                   {getInitials(emp.full_name)}
                 </div>
@@ -248,7 +223,7 @@ export default function AdminDashboard() {
                   <div className="flex items-center gap-2 mt-1">
                     <div className="flex-1 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-indigo-500 rounded-full transition-all"
+                        className="h-full bg-indigo-500 rounded-full transition-all duration-500"
                         style={{ width: `${emp.completion_rate}%` }}
                       />
                     </div>
@@ -258,7 +233,7 @@ export default function AdminDashboard() {
                 <div className="text-right shrink-0">
                   <p className="text-sm font-semibold text-slate-900 dark:text-white">{emp.completed_tasks}/{emp.total_tasks}</p>
                   {emp.overdue_tasks > 0 && (
-                    <p className="text-xs text-red-500">{emp.overdue_tasks} overdue</p>
+                    <p className="text-xs text-red-500">{emp.overdue_tasks} late</p>
                   )}
                 </div>
               </div>

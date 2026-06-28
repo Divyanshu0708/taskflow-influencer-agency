@@ -20,26 +20,30 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      // Sign in
       const { data, error: signInError } = await supabase.auth.signInWithPassword({ email, password })
       if (signInError) throw signInError
-      if (!data.user) throw new Error('No user returned')
+      if (!data.user) throw new Error('Login failed')
 
-      // Fetch profile in parallel - single query
       const { data: profile } = await supabase
         .from('profiles')
         .select('role')
         .eq('id', data.user.id)
         .single()
 
-      // Redirect based on role immediately
       if (profile?.role === 'admin') {
         router.replace('/admin')
       } else {
         router.replace('/employee')
       }
-    } catch (err: any) {
-      setError('Invalid email or password. Please try again.')
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Login failed'
+      if (message.includes('Invalid login credentials') || message.includes('invalid_credentials')) {
+        setError('Invalid email or password. Please try again.')
+      } else if (message.includes('Email not confirmed')) {
+        setError('Please verify your email before signing in.')
+      } else {
+        setError('Something went wrong. Please try again.')
+      }
       setLoading(false)
     }
   }
@@ -68,8 +72,9 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="label">Email address</label>
+              <label className="label" htmlFor="email">Email address</label>
               <input
+                id="email"
                 type="email"
                 className="input"
                 placeholder="you@agency.com"
@@ -78,13 +83,15 @@ export default function LoginPage() {
                 required
                 autoComplete="email"
                 autoFocus
+                disabled={loading}
               />
             </div>
 
             <div>
-              <label className="label">Password</label>
+              <label className="label" htmlFor="password">Password</label>
               <div className="relative">
                 <input
+                  id="password"
                   type={showPassword ? 'text' : 'password'}
                   className="input pr-10"
                   placeholder="Enter your password"
@@ -92,11 +99,14 @@ export default function LoginPage() {
                   onChange={e => setPassword(e.target.value)}
                   required
                   autoComplete="current-password"
+                  disabled={loading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                  tabIndex={-1}
+                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -118,7 +128,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-xs text-slate-400 dark:text-slate-600 mt-6">
-          © 2025 HypeMitrainhouse. All rights reserved.
+          © {new Date().getFullYear()} HypeMitrainhouse. All rights reserved.
         </p>
       </div>
     </div>

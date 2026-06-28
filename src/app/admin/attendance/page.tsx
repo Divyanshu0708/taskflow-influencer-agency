@@ -3,26 +3,37 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Attendance, Profile } from '@/types'
-import { formatDateTime, getInitials, cn } from '@/lib/utils'
-import { Calendar, Clock, UserCheck, UserX, Search } from 'lucide-react'
-import { format, subDays } from 'date-fns'
+import { cn } from '@/lib/utils'
+import { Calendar, Clock, UserCheck, UserX } from 'lucide-react'
+import { format, differenceInMinutes } from 'date-fns'
 
 export default function AdminAttendancePage() {
   const [attendance, setAttendance] = useState<(Attendance & { user?: Profile })[]>([])
   const [employees, setEmployees] = useState<Profile[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
-  const [search, setSearch] = useState('')
 
   const fetchData = useCallback(async () => {
     setLoading(true)
-    const [attRes, empRes] = await Promise.all([
-      supabase.from('attendance').select('*, user:profiles(*)').eq('date', selectedDate).order('check_in', { ascending: false }),
-      supabase.from('profiles').select('*').eq('role', 'employee').eq('is_active', true).order('full_name'),
-    ])
-    if (attRes.data) setAttendance(attRes.data)
-    if (empRes.data) setEmployees(empRes.data)
-    setLoading(false)
+    try {
+      const [attRes, empRes] = await Promise.all([
+        supabase
+          .from('attendance')
+          .select('*, user:profiles(*)')
+          .eq('date', selectedDate)
+          .order('check_in', { ascending: false }),
+        supabase
+          .from('profiles')
+          .select('*')
+          .eq('role', 'employee')
+          .eq('is_active', true)
+          .order('full_name'),
+      ])
+      if (attRes.data) setAttendance(attRes.data)
+      if (empRes.data) setEmployees(empRes.data)
+    } finally {
+      setLoading(false)
+    }
   }, [selectedDate])
 
   useEffect(() => { fetchData() }, [fetchData])
@@ -30,19 +41,19 @@ export default function AdminAttendancePage() {
   const checkedInIds = new Set(attendance.map(a => a.user_id))
   const notCheckedIn = employees.filter(e => !checkedInIds.has(e.id))
 
-  const filtered = attendance.filter(a =>
-    !search || a.user?.full_name.toLowerCase().includes(search.toLowerCase())
-  )
-
-  const getDuration = (checkIn?: string, checkOut?: string) => {
+  const getDuration = (checkIn?: string | null, checkOut?: string | null) => {
     if (!checkIn) return '—'
     const start = new Date(checkIn)
     const end = checkOut ? new Date(checkOut) : new Date()
-    const mins = Math.floor((end.getTime() - start.getTime()) / 60000)
+    const mins = Math.max(0, differenceInMinutes(end, start))
     const h = Math.floor(mins / 60)
     const m = mins % 60
     return `${h}h ${m}m`
   }
+
+  const getInitials = (name: string) => name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+
+  const isToday = selectedDate === new Date().toISOString().split('T')[0]
 
   return (
     <div className="p-4 sm:p-6 max-w-7xl mx-auto">
@@ -50,7 +61,8 @@ export default function AdminAttendancePage() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Attendance</h1>
           <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">
-            {attendance.length} of {employees.length} employees checked in today
+            {isToday ? 'Today' : format(new Date(selectedDate + 'T00:00:00'), 'EEEE, MMMM d, yyyy')} ·{' '}
+            {attendance.length} of {employees.length} checked in
           </p>
         </div>
         <input
@@ -59,23 +71,22 @@ export default function AdminAttendancePage() {
           value={selectedDate}
           max={new Date().toISOString().split('T')[0]}
           onChange={e => setSelectedDate(e.target.value)}
+          aria-label="Select date"
         />
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3 mb-6">
-        <div className="card p-4 text-center">
-          <p className="text-2xl font-bold text-emerald-600">{attendance.length}</p>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Checked In</p>
-        </div>
-        <div className="card p-4 text-center">
-          <p className="text-2xl font-bold text-red-500">{notCheckedIn.length}</p>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Absent</p>
-        </div>
-        <div className="card p-4 text-center">
-          <p className="text-2xl font-bold text-indigo-600">{employees.length}</p>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Total Team</p>
-        </div>
+        {[
+          { label: 'Checked In', value: attendance.length, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-900/20' },
+          { label: 'Absent', value: notCheckedIn.length, color: 'text-red-500 dark:text-red-400', bg: 'bg-red-50 dark:bg-red-900/20' },
+          { label: 'Total Team', value: employees.length, color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-900/20' },
+        ].map(s => (
+          <div key={s.label} className={cn('card p-4 text-center', s.bg, 'border-0')}>
+            <p className={cn('text-2xl font-bold', s.color)}>{loading ? '—' : s.value}</p>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{s.label}</p>
+          </div>
+        ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -83,11 +94,13 @@ export default function AdminAttendancePage() {
         <div className="card overflow-hidden">
           <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center gap-2">
             <UserCheck className="w-4 h-4 text-emerald-500" />
-            <h2 className="font-semibold text-slate-900 dark:text-white">Checked In ({attendance.length})</h2>
+            <h2 className="font-semibold text-slate-900 dark:text-white text-sm">
+              Checked In ({attendance.length})
+            </h2>
           </div>
-          <div className="divide-y divide-slate-100 dark:divide-slate-700">
+          <div className="divide-y divide-slate-100 dark:divide-slate-700 max-h-96 overflow-y-auto">
             {loading ? (
-              <div className="p-4 text-center text-slate-400 text-sm">Loading…</div>
+              <div className="p-6 text-center text-slate-400 text-sm">Loading…</div>
             ) : attendance.length === 0 ? (
               <div className="p-8 text-center text-slate-400 text-sm">No check-ins for this date</div>
             ) : attendance.map(a => (
@@ -96,20 +109,26 @@ export default function AdminAttendancePage() {
                   {a.user ? getInitials(a.user.full_name) : '?'}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{a.user?.full_name}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                      <Clock className="w-3 h-3" /> {a.check_in ? format(new Date(a.check_in), 'h:mm a') : '—'}
+                  <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
+                    {a.user?.full_name ?? 'Unknown'}
+                  </p>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <Clock className="w-3 h-3 text-slate-400" />
+                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                      {a.check_in ? format(new Date(a.check_in), 'h:mm a') : '—'}
+                      {a.check_out ? ` → ${format(new Date(a.check_out), 'h:mm a')}` : isToday ? ' (active)' : ''}
                     </span>
-                    {a.check_out && (
-                      <span className="text-xs text-slate-400">→ {format(new Date(a.check_out), 'h:mm a')}</span>
-                    )}
                   </div>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="text-xs font-medium text-slate-700 dark:text-slate-300">{getDuration(a.check_in, a.check_out)}</p>
-                  <span className={cn('text-xs', a.check_out ? 'text-slate-400' : 'text-emerald-500')}>
-                    {a.check_out ? 'Checked out' : 'Active'}
+                  <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    {getDuration(a.check_in, a.check_out)}
+                  </p>
+                  <span className={cn(
+                    'text-xs',
+                    a.check_out ? 'text-slate-400' : 'text-emerald-500'
+                  )}>
+                    {a.check_out ? 'Done' : 'Working'}
                   </span>
                 </div>
               </div>
@@ -121,24 +140,30 @@ export default function AdminAttendancePage() {
         <div className="card overflow-hidden">
           <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center gap-2">
             <UserX className="w-4 h-4 text-red-400" />
-            <h2 className="font-semibold text-slate-900 dark:text-white">Not Checked In ({notCheckedIn.length})</h2>
+            <h2 className="font-semibold text-slate-900 dark:text-white text-sm">
+              Not Checked In ({notCheckedIn.length})
+            </h2>
           </div>
-          <div className="divide-y divide-slate-100 dark:divide-slate-700">
-            {notCheckedIn.length === 0 ? (
-              <div className="p-8 text-center text-sm">
+          <div className="divide-y divide-slate-100 dark:divide-slate-700 max-h-96 overflow-y-auto">
+            {loading ? (
+              <div className="p-6 text-center text-slate-400 text-sm">Loading…</div>
+            ) : notCheckedIn.length === 0 ? (
+              <div className="p-8 text-center">
                 <UserCheck className="w-8 h-8 text-emerald-400 mx-auto mb-2" />
-                <p className="text-slate-500 dark:text-slate-400">Everyone is present!</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Everyone is present! 🎉</p>
               </div>
             ) : notCheckedIn.map(emp => (
               <div key={emp.id} className="flex items-center gap-3 px-4 py-3">
-                <div className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-500 text-xs font-semibold shrink-0">
+                <div className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 text-xs font-semibold shrink-0">
                   {getInitials(emp.full_name)}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{emp.full_name}</p>
                   <p className="text-xs text-slate-400">{emp.department || emp.email}</p>
                 </div>
-                <span className="text-xs text-red-400 bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded-full">Absent</span>
+                <span className="text-xs text-red-400 bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded-full shrink-0">
+                  Absent
+                </span>
               </div>
             ))}
           </div>
