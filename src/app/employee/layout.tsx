@@ -27,10 +27,10 @@ export default function EmployeeLayout({ children }: { children: React.ReactNode
 
   if (loading || !profile) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
-        <div className="flex gap-1">
-          {[0, 1, 2].map(i => (
-            <div key={i} className="w-2 h-2 rounded-full bg-indigo-600 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+      <div className="min-h-screen flex items-center justify-center bg-[#0D0D0D]">
+        <div className="flex gap-1.5">
+          {[0,1,2].map(i => (
+            <div key={i} className="w-2 h-2 rounded-full bg-[#F5A623] animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
           ))}
         </div>
       </div>
@@ -38,18 +38,16 @@ export default function EmployeeLayout({ children }: { children: React.ReactNode
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 flex flex-col">
+    <div className="min-h-screen bg-[#0D0D0D] flex flex-col">
       <Navbar onMenuToggle={() => setSidebarOpen(!sidebarOpen)} menuOpen={sidebarOpen} />
       <div className="flex flex-1 overflow-hidden">
         <aside className={cn(
-          'fixed lg:static inset-y-0 left-0 z-30 w-60 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800',
+          'fixed lg:static inset-y-0 left-0 z-30 w-56 bg-[#0D0D0D] border-r border-[#2E2E2E]',
           'flex flex-col pt-16 lg:pt-0 transition-transform duration-300',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         )}>
           <div className="flex-1 overflow-y-auto p-3 space-y-0.5">
-            <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider px-3 py-2">
-              My Workspace
-            </p>
+            <p className="text-xs font-semibold text-slate-600 uppercase tracking-wider px-3 py-2">My Workspace</p>
             {navItems.map(({ href, icon: Icon, label }) => {
               const active = pathname === href || (href !== '/employee' && pathname.startsWith(href))
               return (
@@ -62,14 +60,15 @@ export default function EmployeeLayout({ children }: { children: React.ReactNode
               )
             })}
           </div>
-          <div className="p-3 border-t border-slate-200 dark:border-slate-800">
+          <div className="p-3 border-t border-[#2E2E2E]">
             <div className="flex items-center gap-2 px-3 py-2">
               <div className="w-2 h-2 rounded-full bg-blue-500 shrink-0" />
-              <span className="text-xs text-slate-500 dark:text-slate-400">Employee mode</span>
+              <span className="text-xs text-slate-600">Employee mode</span>
             </div>
           </div>
         </aside>
-        {sidebarOpen && <div className="fixed inset-0 z-20 bg-black/30 lg:hidden" onClick={() => setSidebarOpen(false)} />}
+
+        {sidebarOpen && <div className="fixed inset-0 z-20 bg-black/60 lg:hidden" onClick={() => setSidebarOpen(false)} />}
         <main className="flex-1 overflow-y-auto">{children}</main>
       </div>
     </div>

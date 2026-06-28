@@ -10,34 +10,20 @@ module.exports = {
     extend: {
       colors: {
         brand: {
-          50: '#f0f4ff',
-          100: '#e0e9ff',
-          200: '#c7d7fe',
-          300: '#a5bafc',
-          400: '#8194f8',
-          500: '#6366f1',
-          600: '#4f46e5',
-          700: '#4338ca',
-          800: '#3730a3',
-          900: '#312e81',
+          gold: '#F5A623',
+          'gold-light': '#FFB83F',
+          'gold-dark': '#E07B00',
+          orange: '#E07B00',
+          dark: '#0D0D0D',
+          dark2: '#1A1A1A',
+          dark3: '#242424',
+          border: '#2E2E2E',
         },
-        surface: {
-          DEFAULT: '#ffffff',
-          secondary: '#f8fafc',
-          tertiary: '#f1f5f9',
-          dark: '#0f172a',
-          'dark-secondary': '#1e293b',
-          'dark-tertiary': '#334155',
-        }
-      },
-      fontFamily: {
-        sans: ['Inter', 'system-ui', 'sans-serif'],
-        mono: ['JetBrains Mono', 'monospace'],
       },
       animation: {
         'slide-in': 'slideIn 0.2s ease-out',
         'fade-in': 'fadeIn 0.15s ease-out',
-        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+        'gold-pulse': 'goldPulse 2s ease-in-out infinite',
       },
       keyframes: {
         slideIn: {
@@ -47,8 +33,12 @@ module.exports = {
         fadeIn: {
           '0%': { opacity: '0' },
           '100%': { opacity: '1' },
-        }
-      }
+        },
+        goldPulse: {
+          '0%, 100%': { boxShadow: '0 0 0 0 rgba(245,166,35,0)' },
+          '50%': { boxShadow: '0 0 0 6px rgba(245,166,35,0.15)' },
+        },
+      },
     },
   },
   plugins: [],

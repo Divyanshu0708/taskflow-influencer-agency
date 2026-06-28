@@ -36,57 +36,54 @@ export function isOverdue(deadline: string | undefined, status: TaskStatus): boo
   return isPast(new Date(deadline))
 }
 
+// Brand-themed priority config (dark mode optimized)
 export const priorityConfig: Record<TaskPriority, { label: string; color: string; bg: string; dot: string }> = {
   high: {
     label: 'High',
-    color: 'text-red-600 dark:text-red-400',
-    bg: 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800',
-    dot: 'bg-red-500',
+    color: 'text-red-400',
+    bg: 'bg-red-500/10 border-red-500/20',
+    dot: 'bg-red-400',
   },
   medium: {
     label: 'Medium',
-    color: 'text-amber-600 dark:text-amber-400',
-    bg: 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800',
-    dot: 'bg-amber-500',
+    color: 'text-[#F5A623]',
+    bg: 'bg-[#F5A623]/10 border-[#F5A623]/20',
+    dot: 'bg-[#F5A623]',
   },
   low: {
     label: 'Low',
-    color: 'text-emerald-600 dark:text-emerald-400',
-    bg: 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800',
-    dot: 'bg-emerald-500',
+    color: 'text-emerald-400',
+    bg: 'bg-emerald-500/10 border-emerald-500/20',
+    dot: 'bg-emerald-400',
   },
 }
 
+// Brand-themed status config
 export const statusConfig: Record<TaskStatus, { label: string; color: string; bg: string }> = {
   not_started: {
     label: 'Not Started',
-    color: 'text-slate-600 dark:text-slate-400',
-    bg: 'bg-slate-100 dark:bg-slate-800',
+    color: 'text-slate-400',
+    bg: 'bg-slate-500/10',
   },
   in_progress: {
     label: 'In Progress',
-    color: 'text-blue-600 dark:text-blue-400',
-    bg: 'bg-blue-50 dark:bg-blue-900/20',
+    color: 'text-blue-400',
+    bg: 'bg-blue-500/10',
   },
   completed: {
     label: 'Completed',
-    color: 'text-emerald-600 dark:text-emerald-400',
-    bg: 'bg-emerald-50 dark:bg-emerald-900/20',
+    color: 'text-emerald-400',
+    bg: 'bg-emerald-500/10',
   },
   overdue: {
     label: 'Overdue',
-    color: 'text-red-600 dark:text-red-400',
-    bg: 'bg-red-50 dark:bg-red-900/20',
+    color: 'text-red-400',
+    bg: 'bg-red-500/10',
   },
 }
 
 export function getInitials(name: string): string {
-  return name
-    .split(' ')
-    .map((n) => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2)
+  return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
 }
 
 export function formatFileSize(bytes: number): string {

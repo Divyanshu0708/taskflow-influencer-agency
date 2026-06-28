@@ -1,44 +1,48 @@
 import type { Metadata, Viewport } from 'next'
-import { ThemeProvider } from 'next-themes'
 import { Toaster } from 'react-hot-toast'
 import { AuthProvider } from '@/hooks/useAuth'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'TaskFlow — Agency Task Management',
-  description: 'Internal task management for marketing & PR agencies',
-  manifest: '/manifest.json',
-  appleWebApp: { capable: true, statusBarStyle: 'default', title: 'TaskFlow' },
+  title: 'HypeMitra — Task Management',
+  description: 'Internal task management for HypeMitra influencer agency',
+  icons: { icon: '/logo.png', apple: '/logo.png' },
 }
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
-    { media: '(prefers-color-scheme: dark)', color: '#0f172a' },
-  ],
+  themeColor: '#0D0D0D',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en">
       <head />
-      <body className="font-sans antialiased">
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <AuthProvider>
-            {children}
-            <Toaster
-              position="top-right"
-              toastOptions={{
-                duration: 3000,
-                className: 'dark:bg-slate-800 dark:text-white text-sm font-medium',
-                success: { iconTheme: { primary: '#6366f1', secondary: 'white' } },
-              }}
-            />
-          </AuthProvider>
-        </ThemeProvider>
+      <body>
+        <AuthProvider>
+          {children}
+          <Toaster
+            position="top-right"
+            toastOptions={{
+              duration: 3000,
+              style: {
+                background: '#1A1A1A',
+                color: '#fff',
+                border: '1px solid #2E2E2E',
+                fontSize: '13px',
+                fontWeight: '500',
+              },
+              success: {
+                iconTheme: { primary: '#F5A623', secondary: '#0D0D0D' },
+              },
+              error: {
+                iconTheme: { primary: '#ef4444', secondary: '#fff' },
+              },
+            }}
+          />
+        </AuthProvider>
       </body>
     </html>
   )
