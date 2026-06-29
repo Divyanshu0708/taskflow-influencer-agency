@@ -164,7 +164,7 @@ export default function AdminDashboard() {
                 <div key={task.id} className="flex items-center gap-3 px-5 py-3 hover:bg-[#242424] transition-colors">
                   <div className={cn('w-1.5 h-8 rounded-full shrink-0', pr.dot)} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white truncate">{task.title}</p>
+                    <p className="text-sm font-bold text-white truncate">{task.title}</p>
                     <p className="text-xs text-slate-600">{task.assignee?.full_name ?? 'Unassigned'} · {formatDate(task.deadline)}</p>
                   </div>
                   <span className={cn('badge text-xs shrink-0', st.bg, st.color)}>{st.label}</span>

@@ -76,8 +76,8 @@ export default function EmployeeTasksPage() {
   return (
     <div className="p-4 sm:p-6 max-w-4xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">My Tasks</h1>
-        <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">
+        <h1 className="text-2xl font-bold text-white">My Tasks</h1>
+        <p className="text-slate-500 text-sm mt-0.5">
           {loading ? 'Loading…' : `${tasks.length} task${tasks.length !== 1 ? 's' : ''} assigned to you`}
         </p>
       </div>
@@ -114,7 +114,7 @@ export default function EmployeeTasksPage() {
 
       {/* Priority filter */}
       {showFilters && (
-        <div className="mb-4 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+        <div className="mb-4 p-3 bg-[#242424]/50 rounded-xl border border-[#2E2E2E]">
           <label className="label text-xs mb-1.5">Filter by Priority</label>
           <select
             className="input text-sm w-auto"
@@ -138,7 +138,7 @@ export default function EmployeeTasksPage() {
               'px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all shrink-0',
               activeTab === tab.key
                 ? 'bg-indigo-600 text-white shadow-sm'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                : 'bg-[#1A1A1A] text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
             )}
           >
             {tab.label}
@@ -158,16 +158,16 @@ export default function EmployeeTasksPage() {
       {loading ? (
         <div className="space-y-3">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-32 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />
+            <div key={i} className="h-32 bg-[#1A1A1A] rounded-xl animate-pulse" />
           ))}
         </div>
       ) : filteredTasks.length === 0 ? (
         <div className="text-center py-16">
           <CheckSquare className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-          <h3 className="text-lg font-medium text-slate-700 dark:text-slate-300">
+          <h3 className="text-lg font-bold text-white">
             {hasFilters ? 'No tasks match your filters' : (activeTab as string) === 'completed' ? 'No completed tasks yet' : 'No tasks here'}
           </h3>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-sm text-slate-500 mt-1">
             {hasFilters ? 'Try adjusting your search or filters' : 'Your admin will assign tasks to you'}
           </p>
           {hasFilters && (

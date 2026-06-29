@@ -59,8 +59,8 @@ export default function AdminAttendancePage() {
     <div className="p-4 sm:p-6 max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Attendance</h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">
+          <h1 className="text-2xl font-bold text-white">Attendance</h1>
+          <p className="text-slate-500 text-sm mt-0.5">
             {isToday ? 'Today' : format(new Date(selectedDate + 'T00:00:00'), 'EEEE, MMMM d, yyyy')} ·{' '}
             {attendance.length} of {employees.length} checked in
           </p>
@@ -84,7 +84,7 @@ export default function AdminAttendancePage() {
         ].map(s => (
           <div key={s.label} className={cn('card p-4 text-center', s.bg, 'border-0')}>
             <p className={cn('text-2xl font-bold', s.color)}>{loading ? '—' : s.value}</p>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{s.label}</p>
+            <p className="text-xs text-slate-500 mt-0.5">{s.label}</p>
           </div>
         ))}
       </div>
@@ -92,13 +92,13 @@ export default function AdminAttendancePage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Checked in */}
         <div className="card overflow-hidden">
-          <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center gap-2">
+          <div className="p-4 border-b border-[#2E2E2E] flex items-center gap-2">
             <UserCheck className="w-4 h-4 text-emerald-500" />
-            <h2 className="font-semibold text-slate-900 dark:text-white text-sm">
+            <h2 className="font-semibold text-white text-sm">
               Checked In ({attendance.length})
             </h2>
           </div>
-          <div className="divide-y divide-slate-100 dark:divide-slate-700 max-h-96 overflow-y-auto">
+          <div className="divide-y divide-[#2E2E2E] max-h-96 overflow-y-auto">
             {loading ? (
               <div className="p-6 text-center text-slate-400 text-sm">Loading…</div>
             ) : attendance.length === 0 ? (
@@ -109,19 +109,19 @@ export default function AdminAttendancePage() {
                   {a.user ? getInitials(a.user.full_name) : '?'}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
+                  <p className="text-sm font-medium text-white truncate">
                     {a.user?.full_name ?? 'Unknown'}
                   </p>
                   <div className="flex items-center gap-1.5 mt-0.5">
                     <Clock className="w-3 h-3 text-slate-400" />
-                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                    <span className="text-xs text-slate-500">
                       {a.check_in ? format(new Date(a.check_in), 'h:mm a') : '—'}
                       {a.check_out ? ` → ${format(new Date(a.check_out), 'h:mm a')}` : isToday ? ' (active)' : ''}
                     </span>
                   </div>
                 </div>
                 <div className="text-right shrink-0">
-                  <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  <p className="text-xs font-semibold text-slate-300">
                     {getDuration(a.check_in, a.check_out)}
                   </p>
                   <span className={cn(
@@ -138,27 +138,27 @@ export default function AdminAttendancePage() {
 
         {/* Not checked in */}
         <div className="card overflow-hidden">
-          <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center gap-2">
+          <div className="p-4 border-b border-[#2E2E2E] flex items-center gap-2">
             <UserX className="w-4 h-4 text-red-400" />
-            <h2 className="font-semibold text-slate-900 dark:text-white text-sm">
+            <h2 className="font-semibold text-white text-sm">
               Not Checked In ({notCheckedIn.length})
             </h2>
           </div>
-          <div className="divide-y divide-slate-100 dark:divide-slate-700 max-h-96 overflow-y-auto">
+          <div className="divide-y divide-[#2E2E2E] max-h-96 overflow-y-auto">
             {loading ? (
               <div className="p-6 text-center text-slate-400 text-sm">Loading…</div>
             ) : notCheckedIn.length === 0 ? (
               <div className="p-8 text-center">
                 <UserCheck className="w-8 h-8 text-emerald-400 mx-auto mb-2" />
-                <p className="text-sm text-slate-500 dark:text-slate-400">Everyone is present! 🎉</p>
+                <p className="text-sm text-slate-500">Everyone is present! 🎉</p>
               </div>
             ) : notCheckedIn.map(emp => (
               <div key={emp.id} className="flex items-center gap-3 px-4 py-3">
-                <div className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-500 dark:text-slate-400 text-xs font-semibold shrink-0">
+                <div className="w-9 h-9 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-slate-500 text-xs font-semibold shrink-0">
                   {getInitials(emp.full_name)}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{emp.full_name}</p>
+                  <p className="text-sm font-medium text-white truncate">{emp.full_name}</p>
                   <p className="text-xs text-slate-400">{emp.department || emp.email}</p>
                 </div>
                 <span className="text-xs text-red-400 bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded-full shrink-0">

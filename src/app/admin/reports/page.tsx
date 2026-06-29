@@ -145,8 +145,8 @@ export default function AdminReportsPage() {
     <div className="p-4 sm:p-6 max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Reports</h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">Performance & productivity analytics</p>
+          <h1 className="text-2xl font-bold text-white">Reports</h1>
+          <p className="text-slate-500 text-sm mt-0.5">Performance & productivity analytics</p>
         </div>
         <div className="flex gap-2">
           <button onClick={exportToExcel} className="btn-secondary text-sm" disabled={loading}>
@@ -171,8 +171,8 @@ export default function AdminReportsPage() {
               <stat.icon className={cn('w-5 h-5', stat.color)} />
             </div>
             <div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">{stat.label}</p>
-              <p className="text-xl font-bold text-slate-900 dark:text-white">
+              <p className="text-xs text-slate-500">{stat.label}</p>
+              <p className="text-xl font-bold text-white">
                 {loading ? '—' : stat.value}
               </p>
             </div>
@@ -183,9 +183,9 @@ export default function AdminReportsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-6">
         {/* Weekly trend */}
         <div className="lg:col-span-2 card p-5">
-          <h2 className="font-semibold text-slate-900 dark:text-white mb-4">7-Day Activity Trend</h2>
+          <h2 className="font-semibold text-white mb-4">7-Day Activity Trend</h2>
           {loading ? (
-            <div className="h-[220px] bg-slate-50 dark:bg-slate-800 rounded-lg animate-pulse" />
+            <div className="h-[220px] bg-[#242424] rounded-lg animate-pulse" />
           ) : (
             <ResponsiveContainer width="100%" height={220}>
               <LineChart data={weeklyData}>
@@ -203,10 +203,10 @@ export default function AdminReportsPage() {
 
         {/* Pie chart */}
         <div className="card p-5">
-          <h2 className="font-semibold text-slate-900 dark:text-white mb-1">Task Distribution</h2>
+          <h2 className="font-semibold text-white mb-1">Task Distribution</h2>
           <p className="text-xs text-slate-400 mb-3">Overall rate: <span className="font-semibold text-indigo-600">{overallRate}%</span></p>
           {loading ? (
-            <div className="h-[160px] bg-slate-50 dark:bg-slate-800 rounded-lg animate-pulse" />
+            <div className="h-[160px] bg-[#242424] rounded-lg animate-pulse" />
           ) : pieData.length > 0 ? (
             <>
               <ResponsiveContainer width="100%" height={160}>
@@ -222,9 +222,9 @@ export default function AdminReportsPage() {
                   <div key={item.name} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: COLORS[i % COLORS.length] }} />
-                      <span className="text-xs text-slate-600 dark:text-slate-400">{item.name}</span>
+                      <span className="text-xs text-slate-400">{item.name}</span>
                     </div>
-                    <span className="text-xs font-medium text-slate-700 dark:text-slate-300">{item.value}</span>
+                    <span className="text-xs font-medium text-slate-300">{item.value}</span>
                   </div>
                 ))}
               </div>
@@ -238,13 +238,13 @@ export default function AdminReportsPage() {
       {/* Category breakdown */}
       {tasksByCategory.length > 0 && (
         <div className="card p-5 mb-6">
-          <h2 className="font-semibold text-slate-900 dark:text-white mb-4">Tasks by Category</h2>
+          <h2 className="font-semibold text-white mb-4">Tasks by Category</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {tasksByCategory.map((cat, i) => (
-              <div key={cat.name} className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+              <div key={cat.name} className="flex items-center gap-3 p-3 bg-[#242424] rounded-lg">
                 <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: COLORS[i % COLORS.length] }} />
-                <span className="text-sm text-slate-700 dark:text-slate-300 flex-1 truncate">{cat.name}</span>
-                <span className="text-sm font-bold text-slate-900 dark:text-white">{cat.value}</span>
+                <span className="text-sm text-slate-300 flex-1 truncate">{cat.name}</span>
+                <span className="text-sm font-bold text-white">{cat.value}</span>
               </div>
             ))}
           </div>
@@ -253,25 +253,25 @@ export default function AdminReportsPage() {
 
       {/* Employee performance table */}
       <div className="card overflow-hidden">
-        <div className="p-5 border-b border-slate-200 dark:border-slate-700">
-          <h2 className="font-semibold text-slate-900 dark:text-white">Employee Performance</h2>
+        <div className="p-5 border-b border-[#2E2E2E]">
+          <h2 className="font-semibold text-white">Employee Performance</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="bg-slate-50 dark:bg-slate-800/50">
+              <tr className="bg-[#242424]/50">
                 {['Employee', 'Department', 'Total', 'Completed', 'In Progress', 'Overdue', 'Rate'].map(h => (
-                  <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wide whitespace-nowrap">{h}</th>
+                  <th key={h} className="text-left px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-700">
+            <tbody className="divide-y divide-[#2E2E2E]">
               {loading ? (
                 [...Array(3)].map((_, i) => (
                   <tr key={i}>
                     {[...Array(7)].map((_, j) => (
                       <td key={j} className="px-4 py-3">
-                        <div className="h-4 bg-slate-100 dark:bg-slate-800 rounded animate-pulse" />
+                        <div className="h-4 bg-[#1A1A1A] rounded animate-pulse" />
                       </td>
                     ))}
                   </tr>
@@ -288,13 +288,13 @@ export default function AdminReportsPage() {
                         {getInitials(emp.full_name)}
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{emp.full_name}</p>
+                        <p className="text-sm font-semibold text-white truncate">{emp.full_name}</p>
                         <p className="text-xs text-slate-400 truncate">{emp.email}</p>
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400 whitespace-nowrap">{emp.department || '—'}</td>
-                  <td className="px-4 py-3 text-sm font-medium text-slate-900 dark:text-white">{emp.total_tasks}</td>
+                  <td className="px-4 py-3 text-sm text-slate-400 whitespace-nowrap">{emp.department || '—'}</td>
+                  <td className="px-4 py-3 text-sm font-medium text-white">{emp.total_tasks}</td>
                   <td className="px-4 py-3 text-sm text-emerald-600 dark:text-emerald-400 font-medium">{emp.completed_tasks}</td>
                   <td className="px-4 py-3 text-sm text-blue-600 dark:text-blue-400">{emp.in_progress_tasks}</td>
                   <td className="px-4 py-3">
@@ -304,7 +304,7 @@ export default function AdminReportsPage() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2 min-w-[80px]">
-                      <div className="flex-1 h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                      <div className="flex-1 h-1.5 bg-[#2E2E2E] rounded-full overflow-hidden">
                         <div
                           className={cn(
                             'h-full rounded-full transition-all',
@@ -314,7 +314,7 @@ export default function AdminReportsPage() {
                           style={{ width: `${emp.completion_rate}%` }}
                         />
                       </div>
-                      <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 w-8 text-right shrink-0">
+                      <span className="text-xs font-semibold text-slate-300 w-8 text-right shrink-0">
                         {emp.completion_rate}%
                       </span>
                     </div>

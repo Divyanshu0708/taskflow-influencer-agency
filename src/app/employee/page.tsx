@@ -106,10 +106,10 @@ export default function EmployeeDashboard() {
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+          <h1 className="text-2xl font-bold text-white">
             {greeting}, {profile?.full_name.split(' ')[0]}! 👋
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">
+          <p className="text-slate-500 text-sm mt-0.5">
             {format(now, 'EEEE, MMMM d, yyyy')}
           </p>
         </div>
@@ -117,12 +117,12 @@ export default function EmployeeDashboard() {
         {/* Check-in widget */}
         <div className="card p-3 flex items-center gap-3">
           <div>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
+            <p className="text-xs text-slate-500">
               {!checkedIn ? 'Not checked in yet'
                 : !checkedOut ? `In since ${format(new Date(attendance!.check_in!), 'h:mm a')}`
                 : `Done at ${format(new Date(attendance!.check_out!), 'h:mm a')}`}
             </p>
-            <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+            <p className="text-xs font-semibold text-slate-300">
               {!checkedIn ? 'Check in to start your day' : !checkedOut ? 'Currently working' : 'Day complete ✓'}
             </p>
           </div>
@@ -153,15 +153,15 @@ export default function EmployeeDashboard() {
           { label: 'Total', value: stats.total, color: 'text-indigo-600 dark:text-indigo-400', bg: 'bg-indigo-50 dark:bg-indigo-900/20', icon: CheckSquare },
           { label: 'Completed', value: stats.completed, color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-50 dark:bg-emerald-900/20', icon: CheckCircle2 },
           { label: 'In Progress', value: stats.inProgress, color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-50 dark:bg-blue-900/20', icon: Clock },
-          { label: 'Overdue', value: stats.overdue, color: stats.overdue > 0 ? 'text-red-500 dark:text-red-400' : 'text-slate-400', bg: stats.overdue > 0 ? 'bg-red-50 dark:bg-red-900/20' : 'bg-slate-50 dark:bg-slate-800', icon: AlertCircle },
+          { label: 'Overdue', value: stats.overdue, color: stats.overdue > 0 ? 'text-red-500 dark:text-red-400' : 'text-slate-400', bg: stats.overdue > 0 ? 'bg-red-50 dark:bg-red-900/20' : 'bg-[#242424]', icon: AlertCircle },
         ].map(s => (
           <div key={s.label} className="card p-4 flex items-center gap-3">
             <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center shrink-0', s.bg)}>
               <s.icon className={cn('w-5 h-5', s.color)} />
             </div>
             <div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">{s.label}</p>
-              <p className="text-xl font-bold text-slate-900 dark:text-white">
+              <p className="text-xs text-slate-500">{s.label}</p>
+              <p className="text-xl font-bold text-white">
                 {loading ? '—' : s.value}
               </p>
             </div>
@@ -173,10 +173,10 @@ export default function EmployeeDashboard() {
       {!loading && stats.total > 0 && (
         <div className="card p-4">
           <div className="flex items-center justify-between mb-2">
-            <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Overall Progress</p>
+            <p className="text-sm font-medium text-slate-300">Overall Progress</p>
             <p className="text-sm font-bold text-indigo-600 dark:text-indigo-400">{completionRate}%</p>
           </div>
-          <div className="h-2.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+          <div className="h-2.5 bg-[#2E2E2E] rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-indigo-500 to-indigo-400 rounded-full transition-all duration-700"
               style={{ width: `${completionRate}%` }}
@@ -190,14 +190,14 @@ export default function EmployeeDashboard() {
         {/* Urgent / Overdue */}
         {urgentTasks.length > 0 && (
           <div className="card overflow-hidden">
-            <div className="p-4 pb-3 border-b border-slate-200 dark:border-slate-700 flex items-center gap-2">
+            <div className="p-4 pb-3 border-b border-[#2E2E2E] flex items-center gap-2">
               <AlertCircle className="w-4 h-4 text-red-500" />
-              <h2 className="font-semibold text-slate-900 dark:text-white text-sm">Needs Attention</h2>
+              <h2 className="font-semibold text-white text-sm">Needs Attention</h2>
               <span className="ml-auto bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-xs px-2 py-0.5 rounded-full font-medium">
                 {urgentTasks.length}
               </span>
             </div>
-            <div className="divide-y divide-slate-100 dark:divide-slate-700">
+            <div className="divide-y divide-[#2E2E2E]">
               {urgentTasks.map(task => {
                 const pr = priorityConfig[task.priority]
                 const overdue = isOverdue(task.deadline, task.status)
@@ -205,11 +205,11 @@ export default function EmployeeDashboard() {
                   <Link
                     key={task.id}
                     href="/employee/tasks"
-                    className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors"
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-[#242424]/30 transition-colors"
                   >
                     <div className={cn('w-1.5 h-8 rounded-full shrink-0', pr.dot)} />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{task.title}</p>
+                      <p className="text-sm font-bold text-white truncate">{task.title}</p>
                       <p className={cn('text-xs mt-0.5', overdue ? 'text-red-500' : 'text-amber-500')}>
                         {overdue ? '⚠️ Overdue' : getDeadlineLabel(task.deadline)}
                       </p>
@@ -223,23 +223,23 @@ export default function EmployeeDashboard() {
 
         {/* Active tasks */}
         <div className={cn('card overflow-hidden', urgentTasks.length === 0 && 'sm:col-span-2')}>
-          <div className="p-4 pb-3 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
-            <h2 className="font-semibold text-slate-900 dark:text-white text-sm">Active Tasks</h2>
+          <div className="p-4 pb-3 border-b border-[#2E2E2E] flex items-center justify-between">
+            <h2 className="font-semibold text-white text-sm">Active Tasks</h2>
             <Link href="/employee/tasks" className="text-xs text-indigo-600 dark:text-indigo-400 flex items-center gap-1 hover:underline">
               All tasks <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
-          <div className="divide-y divide-slate-100 dark:divide-slate-700">
+          <div className="divide-y divide-[#2E2E2E]">
             {loading ? (
               <div className="p-4 space-y-2">
                 {[...Array(3)].map((_, i) => (
-                  <div key={i} className="h-10 bg-slate-100 dark:bg-slate-700 rounded animate-pulse" />
+                  <div key={i} className="h-10 bg-[#2E2E2E] rounded animate-pulse" />
                 ))}
               </div>
             ) : activeTasks.length === 0 ? (
               <div className="p-6 text-center">
                 <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto mb-2" />
-                <p className="text-sm text-slate-500 dark:text-slate-400">
+                <p className="text-sm text-slate-500">
                   {stats.total === 0 ? 'No tasks assigned yet' : 'All tasks completed! 🎉'}
                 </p>
               </div>
@@ -249,10 +249,10 @@ export default function EmployeeDashboard() {
                 <Link
                   key={task.id}
                   href="/employee/tasks"
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700/30 transition-colors"
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-[#242424]/30 transition-colors"
                 >
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{task.title}</p>
+                    <p className="text-sm font-bold text-white truncate">{task.title}</p>
                     <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1">
                       <Calendar className="w-3 h-3" /> {formatDate(task.deadline)}
                     </p>

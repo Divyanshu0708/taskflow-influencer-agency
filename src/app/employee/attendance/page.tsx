@@ -102,23 +102,23 @@ export default function EmployeeAttendancePage() {
   return (
     <div className="p-4 sm:p-6 max-w-2xl mx-auto space-y-5">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Attendance</h1>
-        <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">Track your daily check-in and check-out</p>
+        <h1 className="text-2xl font-bold text-white">Attendance</h1>
+        <p className="text-slate-500 text-sm mt-0.5">Track your daily check-in and check-out</p>
       </div>
 
       {/* Today's check-in card */}
       <div className="card p-6 text-center">
-        <p className="text-sm text-slate-500 dark:text-slate-400 mb-1">
+        <p className="text-sm text-slate-500 mb-1">
           {format(now, 'EEEE, MMMM d, yyyy')}
         </p>
-        <p className="text-4xl font-mono font-bold text-slate-900 dark:text-white mb-4 tabular-nums tracking-tight">
+        <p className="text-4xl font-mono font-bold text-white mb-4 tabular-nums tracking-tight">
           {format(now, 'hh:mm:ss a')}
         </p>
 
         {/* Status indicator */}
         <div className={cn(
           'inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium mb-6',
-          !checkedIn ? 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+          !checkedIn ? 'bg-[#1A1A1A] text-slate-400'
             : !checkedOut ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
             : 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400'
         )}>
@@ -134,23 +134,23 @@ export default function EmployeeAttendancePage() {
         {/* Times */}
         <div className="grid grid-cols-3 gap-4 mb-6">
           <div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Check In</p>
-            <p className="text-base font-semibold text-slate-900 dark:text-white tabular-nums">
+            <p className="text-xs text-slate-500 mb-1">Check In</p>
+            <p className="text-base font-semibold text-white tabular-nums">
               {today?.check_in ? format(new Date(today.check_in), 'h:mm a') : '—'}
             </p>
           </div>
           <div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Duration</p>
+            <p className="text-xs text-slate-500 mb-1">Duration</p>
             <p className={cn(
               'text-base font-semibold tabular-nums',
-              checkedIn && !checkedOut ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-900 dark:text-white'
+              checkedIn && !checkedOut ? 'text-emerald-600 dark:text-emerald-400' : 'text-white'
             )}>
               {checkedIn ? getDuration(today?.check_in, today?.check_out, !checkedOut ? now : undefined) : '—'}
             </p>
           </div>
           <div>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">Check Out</p>
-            <p className="text-base font-semibold text-slate-900 dark:text-white tabular-nums">
+            <p className="text-xs text-slate-500 mb-1">Check Out</p>
+            <p className="text-base font-semibold text-white tabular-nums">
               {today?.check_out ? format(new Date(today.check_out), 'h:mm a') : '—'}
             </p>
           </div>
@@ -183,16 +183,16 @@ export default function EmployeeAttendancePage() {
 
       {/* Monthly summary */}
       <div className="card p-4">
-        <h2 className="font-semibold text-slate-900 dark:text-white mb-3 text-sm">This Month Summary</h2>
+        <h2 className="font-semibold text-white mb-3 text-sm">This Month Summary</h2>
         <div className="grid grid-cols-3 gap-3">
           {[
             { label: 'Days Present', value: history.filter(a => a.check_in).length, color: 'text-indigo-600 dark:text-indigo-400' },
             { label: 'Total Hours', value: totalHoursThisMonth, color: 'text-emerald-600 dark:text-emerald-400' },
-            { label: 'Avg / Day', value: `${avgHoursPerDay}h`, color: 'text-slate-900 dark:text-white' },
+            { label: 'Avg / Day', value: `${avgHoursPerDay}h`, color: 'text-white' },
           ].map(s => (
-            <div key={s.label} className="text-center p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+            <div key={s.label} className="text-center p-3 bg-[#242424] rounded-lg">
               <p className={cn('text-xl font-bold', s.color)}>{s.value}</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">{s.label}</p>
+              <p className="text-xs text-slate-500 mt-0.5">{s.label}</p>
             </div>
           ))}
         </div>
@@ -200,10 +200,10 @@ export default function EmployeeAttendancePage() {
 
       {/* History */}
       <div className="card overflow-hidden">
-        <div className="p-4 border-b border-slate-200 dark:border-slate-700">
-          <h2 className="font-semibold text-slate-900 dark:text-white text-sm">Attendance History</h2>
+        <div className="p-4 border-b border-[#2E2E2E]">
+          <h2 className="font-semibold text-white text-sm">Attendance History</h2>
         </div>
-        <div className="divide-y divide-slate-100 dark:divide-slate-700">
+        <div className="divide-y divide-[#2E2E2E]">
           {loading ? (
             <div className="p-4 text-center text-slate-400 text-sm">Loading…</div>
           ) : history.length === 0 ? (
@@ -214,10 +214,10 @@ export default function EmployeeAttendancePage() {
               <div key={a.id} className="flex items-center gap-3 px-4 py-3">
                 <Calendar className="w-4 h-4 text-slate-400 shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-900 dark:text-white">
+                  <p className="text-sm font-medium text-white">
                     {format(new Date(a.date + 'T00:00:00'), 'EEE, MMM d')}
                   </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <p className="text-xs text-slate-500">
                     {a.check_in ? format(new Date(a.check_in), 'h:mm a') : 'No check-in'}
                     {a.check_out ? ` → ${format(new Date(a.check_out), 'h:mm a')}` : a.check_in ? ' (no checkout)' : ''}
                   </p>

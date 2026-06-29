@@ -122,8 +122,8 @@ export default function AdminEmployeesPage() {
     <div className="p-4 sm:p-6 max-w-7xl mx-auto">
       <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Employees</h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-0.5">
+          <h1 className="text-2xl font-bold text-white">Employees</h1>
+          <p className="text-slate-500 text-sm mt-0.5">
             {employees.length} team member{employees.length !== 1 ? 's' : ''}
           </p>
         </div>
@@ -146,16 +146,16 @@ export default function AdminEmployeesPage() {
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="h-48 bg-slate-100 dark:bg-slate-800 rounded-xl animate-pulse" />
+            <div key={i} className="h-48 bg-[#1A1A1A] rounded-xl animate-pulse" />
           ))}
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-16">
           <Users className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-          <h3 className="text-lg font-medium text-slate-700 dark:text-slate-300">
+          <h3 className="text-lg font-medium text-slate-300">
             {search ? 'No employees found' : 'No employees yet'}
           </h3>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+          <p className="text-slate-500 text-sm mt-1">
             {search ? 'Try a different search' : 'Add your first team member to get started'}
           </p>
           {!search && (
@@ -176,12 +176,12 @@ export default function AdminEmployeesPage() {
                       {getInitials(emp.full_name)}
                     </div>
                     <div>
-                      <h3 className="font-semibold text-slate-900 dark:text-white text-sm">{emp.full_name}</h3>
+                      <h3 className="font-semibold text-white text-sm">{emp.full_name}</h3>
                       {!emp.is_active && (
-                        <span className="text-xs text-slate-400 dark:text-slate-500">Inactive</span>
+                        <span className="text-xs text-slate-500">Inactive</span>
                       )}
                       {emp.department && emp.is_active && (
-                        <p className="text-xs text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                        <p className="text-xs text-slate-500 flex items-center gap-1">
                           <Building2 className="w-3 h-3" /> {emp.department}
                         </p>
                       )}
@@ -202,12 +202,12 @@ export default function AdminEmployeesPage() {
                 </div>
 
                 <div className="space-y-2 mb-4">
-                  <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                  <div className="flex items-center gap-1.5 text-xs text-slate-500">
                     <Mail className="w-3.5 h-3.5 shrink-0" />
                     <span className="truncate">{emp.email}</span>
                   </div>
                   {emp.phone && (
-                    <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+                    <div className="flex items-center gap-1.5 text-xs text-slate-500">
                       <Phone className="w-3.5 h-3.5 shrink-0" />
                       <span>{emp.phone}</span>
                     </div>
@@ -223,7 +223,7 @@ export default function AdminEmployeesPage() {
                         { label: 'Active', value: summary.in_progress_tasks, color: 'text-blue-600 dark:text-blue-400' },
                         { label: 'Late', value: summary.overdue_tasks, color: summary.overdue_tasks > 0 ? 'text-red-500' : 'text-slate-400' },
                       ].map(stat => (
-                        <div key={stat.label} className="text-center p-1 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                        <div key={stat.label} className="text-center p-1 bg-[#242424] rounded-lg">
                           <p className={cn('text-base font-bold', stat.color)}>{stat.value}</p>
                           <p className="text-xs text-slate-400">{stat.label}</p>
                         </div>
@@ -231,10 +231,10 @@ export default function AdminEmployeesPage() {
                     </div>
                     <div className="space-y-1">
                       <div className="flex justify-between text-xs">
-                        <span className="text-slate-500 dark:text-slate-400">Completion rate</span>
-                        <span className="font-medium text-slate-700 dark:text-slate-300">{summary.completion_rate}%</span>
+                        <span className="text-slate-500">Completion rate</span>
+                        <span className="font-medium text-slate-300">{summary.completion_rate}%</span>
                       </div>
-                      <div className="h-1.5 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                      <div className="h-1.5 bg-[#2E2E2E] rounded-full overflow-hidden">
                         <div
                           className={cn(
                             'h-full rounded-full transition-all duration-500',
@@ -248,7 +248,7 @@ export default function AdminEmployeesPage() {
                     </div>
                   </>
                 ) : (
-                  <p className="text-xs text-slate-400 dark:text-slate-500 text-center py-3">No tasks assigned yet</p>
+                  <p className="text-xs text-slate-500 text-center py-3">No tasks assigned yet</p>
                 )}
 
                 <Link
@@ -267,12 +267,12 @@ export default function AdminEmployeesPage() {
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => { setShowModal(false); setForm(defaultForm) }} />
-          <div className="relative bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md">
-            <div className="flex items-center justify-between p-5 border-b border-slate-200 dark:border-slate-700">
-              <h2 className="text-lg font-semibold text-slate-900 dark:text-white">Add Employee</h2>
+          <div className="relative bg-[#0D0D0D] rounded-2xl shadow-2xl w-full max-w-md">
+            <div className="flex items-center justify-between p-5 border-b border-[#2E2E2E]">
+              <h2 className="text-lg font-semibold text-white">Add Employee</h2>
               <button
                 onClick={() => { setShowModal(false); setForm(defaultForm) }}
-                className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400"
+                className="p-1.5 rounded-lg hover:bg-[#1A1A1A] text-slate-400"
                 aria-label="Close"
               >
                 <X className="w-5 h-5" />
